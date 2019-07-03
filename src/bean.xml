@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:aop="http://www.springframework.org/schema/aop"
+         xmlns:tx="http://www.springframework.org/schema/tx"
+         xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd
+           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.0.xsd"> 
+
+	<bean id="section" class="com.spring.test.aop.section"/>
+    
+    <bean id="pointCutBean" class="com.spring.test.setter.pointCut">
+         <!--依赖注入,配置当前类中相应的属性。
+         		此总方法注入，该类必须有无参构造方法，如果写了有参构造，会覆盖无参构造方法，所以需要把无参构造方法也重写一遍
+         <property name="song" value="Jingle Bells" />
+         <property name="age" value="25" />
+         -->
+         
+         <!-- 有参构造方法注入 -->  
+        <constructor-arg index="0" value="张三"/>  
+        <constructor-arg index="1" value="25"/>  
+    </bean>
+    <!-- 
+                    详情参考：https://www.cnblogs.com/flowwind/p/4782606.html
+	    Before 在方法被调用之前调用通知
+		After 在方法完成之后调用通知，无论方法执行是否成功
+		After-returning 在方法成功执行之后调用通知
+		After-throwing 在方法抛出异常后调用通知
+		Around 通知包裹了被通知的方法，在被通知的方法调用之前和调用之后执行自定义的行为
+     -->
+     
+     
+    <!--
+	    注意：proxy-target-class属性值决定是基于接口的还是基于类的代理被创建。如果proxy-target-class 属性值被设置为true，
+	    那么基于类的代理将起作用（这时需要cglib库）。如果proxy-target-class属值被设置为false或者这个属性被省略，那么标准的JDK 
+	    基于接口的代理将起作用。
+
+	    即使你未声明 proxy-target-class="true" ，但运行类没有继承接口，spring也会自动使用CGLIB代理。
+	    高版本spring自动根据运行类选择 JDK 或 CGLIB 代理
+    -->
+    <aop:config proxy-target-class="true">
+    	<!--指定切面-->
+        <aop:aspect ref="section">
+	        <!-- 
+	        	切点(PointCut)
+                                              通知(Advice)定义了切面的什么和何时，切点定义了何处，切点的定义会匹配通知所要织入的一个或多个连接点，我们通常使用明确的类的方法名称来指定这些切点，
+                                              或是利用正则表达式定义匹配的类和方法名称来指定这些切点。
+					切点的格式如下:
+					execution(* com.spring.test.action1.Performer.perform(..))
+						execttion:在方法执行时触发
+						* com.spring.test.action1.Performer.perform(..):特定方法
+						*:返回任意类型
+						com.spring.test.action1.Performer:方法所属类型。
+						perform：此方法
+						..:使用任意参数
+	         -->
+	         <!--定义切点-->
+            <aop:pointcut id="pointCut" expression="execution(* com.spring.test.setter.pointCut.doSomething(..))"/>
+            
+            
+            <!--定义连接点   此处method指定的方法是上面指定切面中的方法，也就是<aop:aspect ref="section">标签指定的bean -->
+            <!-- Before 在方法被调用之前调用通知 -->
+            <aop:before pointcut-ref="pointCut" method="methodBefore"/>
+            <!-- After-returning 在方法成功执行之后调用通知 -->
+            <aop:after-returning pointcut-ref="pointCut" method="methodAfter"/>
+            <!-- After-throwing 在方法抛出异常后调用通知 -->
+            <aop:after-throwing pointcut-ref="pointCut" method="throwMethod"/>
+        </aop:aspect>
+    </aop:config>
+</beans>
